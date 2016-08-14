@@ -6,15 +6,17 @@ from collections import OrderedDict
 
 
 class ExcelExtractor(object):
-    @abstractmethod
     def extract(self):
-        return pd.ExcelFile(self._file_name)
+        col_map = OrderedDict(zip(self._col_names, self.col_names_cur))
+        res = self._df[[col for col in col_map.values() if col]]
+        res.columns = [key for key in col_map if col_map[key]]
+        return res
 
-    def __init__(self, file_name):
-        self._file_name = file_name
-        self._col_names = ['Lot number out of total', 'Quantity', 'Bottle size', 'Vintage', 'Name', 'Designation',
-                           'Producer', 'Levels', 'Low', 'High', 'Sale Price', 'Region', 'Score'
+    def __init__(self, file_name, sheet_name, skip_rows=None):
+        self._col_names = [u'Lot number out of total', u'Quantity', u'Bottle size', u'Vintage', u'Name', u'Designation',
+                           u'Producer', u'Levels', u'Low', u'High', u'Sale Price', u'Region', u'Score'
                            ]
+        self._df = pd.read_excel(open(file_name, 'rb'), sheetname=sheet_name, skiprows=skip_rows)
 
     @staticmethod
     def factory(type, file_name):
@@ -32,35 +34,35 @@ class ExcelExtractor(object):
 
 
 class ExcelExtractor1(ExcelExtractor):
-    def extract(self):
-        xl = super(ExcelExtractor1, self).extract().parse('qryCatalogExcel')
-        col_names1 = ['LotNo', 'Quantity', None, 'Vintage', None, 'Designation', 'Producer', 'Levels', 'Low', 'High',
-                      None, 'RegionDescription', 'ItemWineScore']
-        col_map = OrderedDict(zip(self._col_names, col_names1))
-        res = xl[[col for col in col_map.values() if col]]
-        res.columns = [key for key in col_map if col_map[key]]
-        return res
+    def __init__(self, file_name):
+        super(ExcelExtractor1, self).__init__(file_name, 'qryCatalogExcel')
+        self.col_names_cur = [u'LotNo', u'Quantity', None, u'Vintage', None, u'Designation', u'Producer', u'Levels',
+                              u'Low', u'High', None, u'RegionDescription', u'ItemWineScore']
 
 
 class ExcelExtractor2(ExcelExtractor):
-    def extract(self):
-        xl = super(ExcelExtractor1, self).extract().parse('Sheet1')
-        return xl
+    def __init__(self, file_name):
+        super(ExcelExtractor2, self).__init__(file_name, 'Sheet1', skip_rows=1)
+        self.col_names_cur = [u'Lot No.', u'Quantity', None, None, None, None, None, None, u'Estimate Low $USD',
+                              u'Estimate High $USD', None, None, None]
 
 
 class ExcelExtractor3(ExcelExtractor):
-    def extract(self):
-        xl = super(ExcelExtractor1, self).extract().parse('Wine Online NYC_1-15 September')
-        return xl
+    def __init__(self, file_name):
+        super(ExcelExtractor3, self).__init__(file_name, 'Wine Online NYC_1-15 September', skip_rows=5)
+        self.col_names_cur = [u'Lot', u'Qty', u'Size', u'Vintage', u'Title', None, None, None, u'Low Estimate',
+                              u'High Estimate', None, None, None]
 
 
 class ExcelExtractor4(ExcelExtractor):
-    def extract(self):
-        xl = super(ExcelExtractor1, self).extract().parse('Sheet1')
-        return xl
+    def __init__(self, file_name):
+        super(ExcelExtractor4, self).__init__(file_name, 'Sheet1')
+        self.col_names_cur = [u'Lot number', None, None, None, None, None, None, None, u'Low estimate',
+                              u'High estimate', None, None, None]
 
 
 class ExcelExtractor5(ExcelExtractor):
-    def extract(self):
-        xl = super(ExcelExtractor1, self).extract().parse('0915NY')
-        return xl
+    def __init__(self, file_name):
+        super(ExcelExtractor5, self).__init__(file_name, '0915NY')
+        self.col_names_cur = [u'Lot', u'Qty', u'Size', u'Vintage', u'Description', None, None, None, u'Low', u'High',
+                              None, u'Region', u'Score']
